@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LDIFTransform</title>
+</head>
+
+<body>
+<!-- ### --><h1>LDIFTransform</h1>
+<blockquote><p>A tool based on the UnboundID LDAP SDK library that can be used to transform LDIF files.</p>
+</blockquote><h1>Requirements</h1>
+<ul>
+  <li>Java 8u40 or newer</li>
+  <li>UnboundID LDAP SDK</li>
+  <li>SLF4J</li>
+</ul><h1>Instructions</h1><p>For help run:  java -jar LDIFTransform-1.0.jar`</p><p>which outputs:</p>
+<pre><code>java -jar LDIFTransform-1.0.jar &lt;path to transform file&gt; &lt;path to input LDIF&gt; &lt;path to output LDIF&gt; &lt;name of transformer class/path to JavaScript file&gt; changetype &lt;add|delete|none&gt; [NoSort]
+Transformer class names:
+TranslateDN
+DeleteAttributes
+TranslateADUser
+TranslateComputer
+</code></pre><p>Explanation of the different options:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Argument </th>
+      <th>Explanation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>&lt;path to transform file&gt; </td>
+      <td>Required, specifies a properties file with different key/values that are used by the transformer. </td>
+    </tr>
+    <tr>
+      <td>&lt;path to input LDIF&gt; </td>
+      <td>Required, the LDIF file containing content records that will be transformed </td>
+    </tr>
+    <tr>
+      <td>&lt;path to output LDIF&gt; </td>
+      <td>Required, the LDIF file that will be created and populated with modified data </td>
+    </tr>
+    <tr>
+      <td>&lt;name of transformer class/path to JavaScript file&gt; </td>
+      <td>Required, does the actual transformation of each LDIF record. All transformers extend the TransformerCommon class. Can be a predefined class included with the program, a class you write yourself, compile and include on the classpath when running the program or a JavaScript file that extends the TransformerCommon class using Nashorns Java.extend() function. For more details see the Transformers section of the documentation </td>
+    </tr>
+    <tr>
+      <td>changetype &lt;add|delete|none&gt; </td>
+      <td>Required, the type of LDIF record to produce. <code>add</code> produces <code>changetype: add</code>, <code>delete</code> produces <code>changetype: delete</code>, <code>none</code> returns the Entry as it was returned by the transformer. </td>
+    </tr>
+    <tr>
+      <td>[NoSort] </td>
+      <td>Optional, if absent then the output will be sorted hierarchically. Use NoSort if the file is already sorted or sorting doesn't matter. Sorting can cause OutOfMemory errors if processing large files. In that increase the heap size when running the application. </td>
+    </tr>
+  </tbody>
+</table><h1>Transformers</h1><p>There are several transformers that come with the application that can be used to change the LDIF file in some specific ways. You may also write your own either in Java or JavaScript. The JavaScript way is easier since you don't have to have the JDK to compile the code.</p><p>This is a list of the built-in transformers, you can also see the list when running the application without any arguments.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Transformer name </th>
+      <th>Explanation </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>DeleteAttributes</code> </td>
+      <td>Deletes attributes from the entry using the property <code>delete-attribute</code>. </td>
+    </tr>
+    <tr>
+      <td><code>TranslateDN</code> </td>
+      <td>Translates the DN using regex using the properties <code>dnPartToReplace</code> and <code>dnPartToReplaceWith</code>. Also calls <code>DeleteAttributes</code> </td>
+    </tr>
+    <tr>
+      <td><code>TranslateADUser</code> </td>
+      <td>Calls <code>TranslateDN</code> first. Sets a static password on the entry using the property <code>static-password</code>. Translates the DN for the <code>memberOf</code> values. Creates separate LDIF modifies for each <code>memberOf</code> value that modify the group specified in the <code>memberOf</code> value. Deletes the <code>cn</code> attribute if present.</td>
+    </tr>
+    <tr>
+      <td><code>TranslateComputer</code> </td>
+      <td>Calls <code>TranslateDN</code> first. Removes the <code>samAccountType</code> and <code>cn</code> attributes if present. Translates the DN for the <code>memberOf</code> and <code>managedBy</code> values. Creates separate LDIF modifies for each <code>memberOf</code> value that modify the group specified in the <code>memberOf</code> value. </td>
+    </tr>
+  </tbody>
+</table><h1>Writing transformers in JavaScript</h1><p>One can write own transformers in JavaScript. For examples see the <code>.js</code> files in the <code>doc</code> directory, use the <code>transformer-template.js</code> file as a base for creating new transformers. Modify the translate function, this is where the magic happens:</p>
+<pre><code>function getTransformer(propertiesFile) {
+
+var tc = new TransformerCommon(propertiesFile, 
+    //Modify this function to perform all necessary processing on the LDIF entry
+    { translate: function(entry, firstLineNumber) {
+    //Use _super_.methodName() to call methods from the TransformerCommon class.
+    var _super_ = Java.super(tc);
+
+    //Uncomment to remove attributes specified by the &#39;delete-attribute&#39; property
+    //entry = removeAttributes(entry, _super_.getAttributesToDelete());
+
+    return entry;
+    }});
+return tc;
+};
+</code></pre><p>This requires knowledge of the UnboundID LDAP SDK Entry and Attribute classes. Links to the Javadoc can be found in the <code>.js</code> files in the <code>doc</code> directory.</p><h1>Properties file (transform file)</h1><p>The transform file which is the first argument expected by the application is just a simple Java properties file which you can access during runtime. You can add any key/value pairs you want. There are some predefined that will be preloaded and for which there exists convenience methods you can call to get the values.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Key </th>
+      <th>Explanation </th>
+      <th>Method name </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>delete-attribute</code> </td>
+      <td>Comma separated list of attributes to delete from the entry if present, e.g. <code>cn,lastLogon,sAMAccountType</code> </td>
+      <td>getAttributesToDelete() </td>
+    </tr>
+    <tr>
+      <td><code>dnPartToReplace</code> </td>
+      <td>Which part of the DN to replace, e.g. <code>dc=acme,dc=se</code> </td>
+      <td>getDnPartToReplace() </td>
+    </tr>
+    <tr>
+      <td><code>dnPartToReplaceWith</code> </td>
+      <td>The string that will replace the part specified in <code>dnPartToReplace</code>, e.g. <code>dc=mydomain,dc=de</code> </td>
+      <td>getDnPartToReplaceWith() </td>
+    </tr>
+    <tr>
+      <td><code>prefixToDN</code> </td>
+      <td>A string that should be prefixed to the DN, how and where depends on the implementation </td>
+      <td>getPrefixToDN() </td>
+    </tr>
+    <tr>
+      <td><code>reformatDN-attribute</code> </td>
+      <td>Attributes that contain DN's that should be reformatted in the same way as the DN of the entry, e.g. <code>memberOf</code> and such. </td>
+      <td>getAttributesToReformat() </td>
+    </tr>
+    <tr>
+      <td><code>static-password</code> </td>
+      <td>A password that should be set on all entries, the name of the attribute depends on the implementation </td>
+      <td>getStaticPassword() </td>
+    </tr>
+  </tbody>
+</table><p>You can access the Properties object from the transformer code by calling the <code>getProperties()</code> method and that way access your own properties.</p><h1>Concepts</h1><p>The basic concept is: input -&gt; transform -&gt; output</p><p>The transform part something that is different from case to case and you can basically do almost anything you want.</p><p>Let's say you have a file containing entries from directory server A (DS1) and you need to import those entries into directory server B which runs another vendors software (DS2). There are of course differences in where the entries will be placed so we need to modify the DN of all entries. We might need to remove some attributes that shouldn't be imported into DS2. We might need to add some attributes that don't exists in DS1 or we need to reformat the existing attributes.</p><p>All this is solvable using the usual tools such as <code>sed</code> or <code>awk</code> or <code>perl</code> or just about any other scripting language. You can also of course solve this using an Identity Management solution.</p><p>For one time imports, an IDM solution is often to much. Using other tools that don't understand LDIF is workable but you have to take care to think about line folding, base 64 encoding/decoding that might occur if you have non-ASCII characters in your values or in the DN and other LDIF specifics when you parse the file.</p><p>So the basic idea is to use something that understands LDIF and is specifically written from the start for that purpose. Then we can concentrate on the task at hand and we don't have worry if we will produce valid LDIF or not since we are using a well know and tested library for that.</p><h1>Example usage</h1>
+<ul>
+  <li>Convert content records to add change records and transform the DN and sort the entries</li>
+</ul><p><code>java -jar LDIFTransform-1.0.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add</code></p>
+<ul>
+  <li>Convert content records to delete change records without transforming the DN and don't sort</li>
+</ul><p><code>java -jar LDIFTransform-1.0.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort</code></p>
+<ul>
+  <li>Convert content records to content records and transform the DN and don't sort</li>
+</ul><p><code>java -jar LDIFTransform-1.0.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort</code></p><h1>Limitations</h1><p>Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.</p><h1>License</h1><p><a href="http://www.gnu.org/licenses/gpl-3.0.txt">GPL v3.0</a></p>
+</body>
+
+</html>

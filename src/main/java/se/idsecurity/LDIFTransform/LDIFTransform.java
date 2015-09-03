@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.EntrySorter;
+import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldif.LDIFAddChangeRecord;
 import com.unboundid.ldif.LDIFDeleteChangeRecord;
 import com.unboundid.ldif.LDIFException;
@@ -55,7 +56,7 @@ public class LDIFTransform {
     public static void main(String[] args) {
 
         if (args.length < LENGTH_OF_ARGS) {
-            System.out.println("Usage: java -jar LDIFTransform-<version>.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class> changetype <add|delete|none> [NoSort]");
+            System.out.println("Usage: java -jar LDIFTransform-<version>.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class> changetype <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]");
             System.out.println("Transformer class names:");
 
             for (Transformers t : Transformers.values()) {
@@ -112,6 +113,15 @@ public class LDIFTransform {
                         case "none":
                             record = entry;
                             break;
+                        case "modify-add":
+                            record = LDIFModifyGenerator.getModify(entry, ModificationType.ADD);
+                            break;
+                        case "modify-replace":
+                            record = LDIFModifyGenerator.getModify(entry, ModificationType.REPLACE);
+                            break;
+                        case "modify-delete":
+                            record = LDIFModifyGenerator.getModify(entry, ModificationType.DELETE);
+                            break;
                         default:
                             record = new LDIFAddChangeRecord(entry);
                             break;
@@ -146,6 +156,15 @@ public class LDIFTransform {
                                 break;
                             case "delete":
                                 record = new LDIFDeleteChangeRecord(entry.getDN());
+                                break;
+                            case "modify-add":
+                                record = LDIFModifyGenerator.getModify(entry, ModificationType.ADD);
+                                break;
+                            case "modify-replace":
+                                record = LDIFModifyGenerator.getModify(entry, ModificationType.REPLACE);
+                                break;
+                            case "modify-delete":
+                                record = LDIFModifyGenerator.getModify(entry, ModificationType.DELETE);
                                 break;
                             case "none":
                                 record = entry;

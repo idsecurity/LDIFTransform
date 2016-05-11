@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 almu
+ * Copyright (C) 2016 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public class TranslateComputer extends TransformerCommon {
     @Override
     public Entry translate(Entry original, long firstLineNumber)
             throws LDIFException {
-        logger.error("Processing dn {}, line number {}", original.getDN(),
+        logger.info("Processing dn {}, line number {}", original.getDN(),
                 firstLineNumber);
 
         Entry entry = original;

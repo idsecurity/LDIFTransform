@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 almu
+ * Copyright (C) 2016 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ public class TranslateDN extends TransformerCommon {
             throws LDIFException {
 
         Entry entry = original;
-        logger.error("Processing dn {}, line number {}", entry.getDN(),
+        logger.info("Processing dn {}, line number {}", entry.getDN(),
                 firstLineNumber);
 		// Replace the DC=ACME,DC=SE part in the dn with the string in
         // dnPartToReplaceWith, e.g. OU=MyTest,DC=ACMEX,DC=SE
@@ -76,7 +76,7 @@ public class TranslateDN extends TransformerCommon {
             dn = dnMatcher.replaceFirst(getDnPartToReplaceWith());
             entry.setDN(dn);
         } else {
-            logger.error("Couldn't find DN {} in string {} on line number {}",
+            logger.info("Couldn't find DN {} in string {} on line number {}",
                     getDnPartToReplace(), dn, firstLineNumber);
         }
 

@@ -13,8 +13,8 @@
   <li>Java 8u40 or newer</li>
   <li>UnboundID LDAP SDK</li>
   <li>SLF4J</li>
-</ul><h1>Instructions</h1><p>For help run:  java -jar LDIFTransform-1.1.jar`</p><p>which outputs:</p>
-<pre><code>java -jar LDIFTransform-1.1.jar &lt;path to transform file&gt; &lt;path to input LDIF&gt; &lt;path to output LDIF&gt; &lt;name of transformer class/path to JavaScript file&gt; changetype &lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; [NoSort]
+</ul><h1>Instructions</h1><p>For help run:  java -jar LDIFTransform-1.2.jar`</p><p>which outputs:</p>
+<pre><code>java -jar LDIFTransform-1.2.jar &lt;path to transform file&gt; &lt;path to input LDIF&gt; &lt;path to output LDIF&gt; &lt;name of transformer class/path to JavaScript file&gt; &lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; [NoSort]
 Transformer class names:
 TranslateDN
 DeleteAttributes
@@ -46,8 +46,8 @@ TranslateComputer
       <td>Required, does the actual transformation of each LDIF record. All transformers extend the TransformerCommon class. Can be a predefined class included with the program, a class you write yourself, compile and include on the classpath when running the program or a JavaScript file that extends the TransformerCommon class using Nashorns Java.extend() function. For more details see the Transformers section of the documentation </td>
     </tr>
     <tr>
-      <td>changetype &lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; </td>
-      <td>Required, the type of LDIF record to produce. <code>add</code> produces <code>changetype: add</code>, <code>delete</code> produces <code>changetype: delete</code>, <code>modify-add</code> produces <code>changetype: modify</code> where each attribute value is an <code>add</code>, <code>modify-replace</code> produces <code>changetype: modify</code> where each attribute value is a <code>replace</code>, <code>modify-delete</code> produces <code>changetype: modify</code> where each attribute value is a <code>delete</code>, <code>none</code> returns the Entry as it was returned by the transformer. </td>
+      <td>&lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; </td>
+      <td>Required, the changetype of LDIF record to produce. <code>add</code> produces <code>changetype: add</code>, <code>delete</code> produces <code>changetype: delete</code>, <code>modify-add</code> produces <code>changetype: modify</code> where each attribute value is an <code>add</code>, <code>modify-replace</code> produces <code>changetype: modify</code> where each attribute value is a <code>replace</code>, <code>modify-delete</code> produces <code>changetype: modify</code> where each attribute value is a <code>delete</code>, <code>none</code> returns the Entry as it was returned by the transformer. </td>
     </tr>
     <tr>
       <td>[NoSort] </td>
@@ -140,13 +140,16 @@ return tc;
 </table><p>You can access the Properties object from the transformer code by calling the <code>getProperties()</code> method and that way access your own properties.</p><h1>Concepts</h1><p>The basic concept is: input -&gt; transform -&gt; output</p><p>The transform part something that is different from case to case and you can basically do almost anything you want.</p><p>Let's say you have a file containing entries from directory server A (DS1) and you need to import those entries into directory server B which runs another vendors software (DS2). There are of course differences in where the entries will be placed so we need to modify the DN of all entries. We might need to remove some attributes that shouldn't be imported into DS2. We might need to add some attributes that don't exists in DS1 or we need to reformat the existing attributes.</p><p>All this is solvable using the usual tools such as <code>sed</code> or <code>awk</code> or <code>perl</code> or just about any other scripting language. You can also of course solve this using an Identity Management solution.</p><p>For one time imports, an IDM solution is often to much. Using other tools that don't understand LDIF is workable but you have to take care to think about line folding, base 64 encoding/decoding that might occur if you have non-ASCII characters in your values or in the DN and other LDIF specifics when you parse the file.</p><p>So the basic idea is to use something that understands LDIF and is specifically written from the start for that purpose. Then we can concentrate on the task at hand and we don't have worry if we will produce valid LDIF or not since we are using a well know and tested library for that.</p><h1>Example usage</h1>
 <ul>
   <li>Convert content records to add change records and transform the DN and sort the entries</li>
-</ul><p><code>java -jar LDIFTransform-1.1.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add</code></p>
+</ul><p><code>java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add</code></p>
 <ul>
   <li>Convert content records to delete change records without transforming the DN and don't sort</li>
-</ul><p><code>java -jar LDIFTransform-1.1.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort</code></p>
+</ul><p><code>java -jar LDIFTransform-1.2.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort</code></p>
 <ul>
   <li>Convert content records to content records and transform the DN and don't sort</li>
-</ul><p><code>java -jar LDIFTransform-1.1.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort</code></p><h1>Limitations</h1><p>Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.</p><h1>License</h1><p><a href="http://www.gnu.org/licenses/gpl-3.0.txt">GPL v3.0</a></p>
+</ul><p><code>java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort</code></p><h1>Skipping entries</h1><p>Since v1.2 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to <code>ignore</code>. For an example see the <code>doc\fullName.js</code> transformer.</p><h1>Limitations</h1><p>Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.</p><h1>Changelog</h1><p>v1.2 (2016-05-11) * Add version header to the output LDIF file. * Add better logging of input parameters. * Add support for skipping entries, i.e. not writing some entries that are in the input LDIF to the output LDIF by setting the entry DN to <code>ignore</code>.</p><p>v1.1 (2015-09-03) * Added support for producing LDIF files with <code>changetype: modify</code></p><p>v1.0 (2015-07-02)</p>
+<ul>
+  <li>Initial release</li>
+</ul><h1>License</h1><p><a href="http://www.gnu.org/licenses/gpl-3.0.txt">GPL v3.0</a></p>
 </body>
 
 </html>

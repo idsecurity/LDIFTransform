@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 almu
+ * Copyright (C) 2016 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,19 +23,25 @@ import com.unboundid.ldap.sdk.ModificationType;
 import com.unboundid.ldif.LDIFModifyChangeRecord;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author almu
  */
 public class LDIFModifyGenerator {
-    
+    private static final Logger logger = LoggerFactory.getLogger(LDIFModifyGenerator.class);
     public static LDIFModifyChangeRecord getModify(Entry entry, ModificationType type) {
         List<Modification> mods = new ArrayList<>();
         
         for (Attribute a : entry.getAttributes()) {
             Modification mod = new Modification(type, a.getName(), a.getRawValues());
             mods.add(mod);
+        }
+        
+        if (mods.isEmpty()) {
+            logger.error("Trouble processing entry (No attributes?): " + entry);
         }
         
         LDIFModifyChangeRecord mod = new LDIFModifyChangeRecord(entry.getDN(), mods);

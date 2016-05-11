@@ -11,12 +11,12 @@
 # Instructions
 
 For help run:
-    java -jar LDIFTransform-1.1.jar`
+    java -jar LDIFTransform-1.2.jar`
 
 which outputs:
 
 
-    java -jar LDIFTransform-1.1.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> changetype <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
+    java -jar LDIFTransform-1.2.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
     Transformer class names:
     TranslateDN
     DeleteAttributes
@@ -32,7 +32,7 @@ Explanation of the different options:
 | \<path to input LDIF> | Required, the LDIF file containing content records that will be transformed |
 | \<path to output LDIF> | Required, the LDIF file that will be created and populated with modified data |
 | <name of transformer class/path to JavaScript file> | Required, does the actual transformation of each LDIF record. All transformers extend the TransformerCommon class. Can be a predefined class included with the program, a class you write yourself, compile and include on the classpath when running the program or a JavaScript file that extends the TransformerCommon class using Nashorns Java.extend() function. For more details see the Transformers section of the documentation |
-| changetype <add\|delete\|modify-replace\|modify-add\|modify-delete\|none> | Required, the type of LDIF record to produce. `add` produces `changetype: add`, `delete` produces `changetype: delete`, `modify-add` produces `changetype: modify` where each attribute value is an `add`, `modify-replace` produces `changetype: modify` where each attribute value is a `replace`, `modify-delete` produces `changetype: modify` where each attribute value is a `delete`, `none` returns the Entry as it was returned by the transformer. |
+| <add\|delete\|modify-replace\|modify-add\|modify-delete\|none> | Required, the changetype of LDIF record to produce. `add` produces `changetype: add`, `delete` produces `changetype: delete`, `modify-add` produces `changetype: modify` where each attribute value is an `add`, `modify-replace` produces `changetype: modify` where each attribute value is a `replace`, `modify-delete` produces `changetype: modify` where each attribute value is a `delete`, `none` returns the Entry as it was returned by the transformer. |
 | [NoSort] | Optional, if absent then the output will be sorted hierarchically. Use NoSort if the file is already sorted or sorting doesn't matter. Sorting can cause OutOfMemory errors if processing large files. In that increase the heap size when running the application. |
 
 # Transformers
@@ -115,19 +115,37 @@ Then we can concentrate on the task at hand and we don't have worry if we will p
 
 - Convert content records to add change records and transform the DN and sort the entries
 
-`java -jar LDIFTransform-1.1.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
+`java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
 
 - Convert content records to delete change records without transforming the DN and don't sort
 
-`java -jar LDIFTransform-1.1.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
+`java -jar LDIFTransform-1.2.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
 
 - Convert content records to content records and transform the DN and don't sort
 
-`java -jar LDIFTransform-1.1.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
+`java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
+
+# Skipping entries
+Since v1.2 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to `ignore`.
+For an example see the `doc\fullName.js` transformer.
 
 # Limitations
 
 Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.
+
+# Changelog
+
+v1.2 (2016-05-11)
+* Add version header to the output LDIF file.
+* Add better logging of input parameters.
+* Add support for skipping entries, i.e. not writing some entries that are in the input LDIF to the output LDIF by setting the entry DN to `ignore`.
+
+v1.1 (2015-09-03)
+* Added support for producing LDIF files with `changetype: modify`
+
+v1.0 (2015-07-02)
+
+* Initial release
 
 # License
 

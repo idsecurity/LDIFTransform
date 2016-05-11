@@ -60,6 +60,24 @@ function getTransformer(propertiesFile) {
 		{ translate: function(entry, firstLineNumber) {
 		//Use _super_.methodName() to call methods from the TransformerCommon class.
 		var _super_ = Java.super(tc);
+		
+		/**
+		 * Builds a new fullName attribute from the givenName and sn attribute on the entry.
+		 * If the new fullName is different from the current fullName then it will be set on the entry.
+		 * Otherwise we will set the entry DN to "ignore" to cause the program to skip this entry when writing the output LDIF file.
+		 */
+		var currentFullName = entry.getAttributeValue("fullName");
+		var givenName = entry.getAttributeValue("givenName");
+		var sn = entry.getAttributeValue("sn");
+		var updatedFullName = givenName + " " + sn;
+		entry.removeAttribute("givenName");
+		entry.removeAttribute("sn");
+		
+		if (currentFullName === updatedFullName) {
+			entry.setDN("ignore");
+		} else {
+			entry.setAttribute("fullName", updatedFullName);
+		}
 
 		//Uncomment to remove attributes specified by the 'delete-attribute' property
 		//entry = removeAttributes(entry, _super_.getAttributesToDelete());

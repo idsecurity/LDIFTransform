@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 almu
+ * Copyright (C) 2016 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ public class LDIFTransform {
     public static void main(String[] args) {
 
         if (args.length < LENGTH_OF_ARGS) {
-            System.out.println("Usage: java -jar LDIFTransform-<version>.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class> changetype <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]");
+            System.out.println("Usage: java -jar LDIFTransform-<version>.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]");
             System.out.println("Transformer class names:");
 
             for (Transformers t : Transformers.values()) {
@@ -71,14 +71,21 @@ public class LDIFTransform {
         }
 
         File transform = new File(args[0]);
+        logger.info("Transform properties file is: {}", transform.getPath());
 
         File ldifInput = new File(args[1]);
+        logger.info("LDIF input file is: {}", ldifInput.getPath());
 
         File ldifOutput = new File(args[2]);
+        logger.info("LDIF output file is: {}", ldifOutput.getPath());
 
         String transformerClassName = args[3];
+        logger.info("Transformer class is: {}", transformerClassName);
 
         String changeType = args[4];
+        logger.info("Change type is: {}", changeType);
+        
+        logger.info("NoSort is: {}", noSort);
 
         TransformerCommon classToUse = GetTransformer.getTransformerClass(transformerClassName, transform);
 
@@ -89,6 +96,7 @@ public class LDIFTransform {
             int entriesRead = 0;
             int errorsEncountered = 0;
             writer = new LDIFWriter(ldifOutput);
+            writer.writeVersionHeader();
 
             Set<Entry> unsorted = new HashSet<>(SETSIZE);
 
@@ -126,12 +134,16 @@ public class LDIFTransform {
                             record = new LDIFAddChangeRecord(entry);
                             break;
                     }
-
-                    if (noSort) {
-                        writer.writeLDIFRecord(record);
-                    } else {
-                        unsorted.add(entry);
+                    
+                    //Skip records whose DN is "ignore"
+                    if (!record.getDN().equalsIgnoreCase("ignore")) {
+                        if (noSort) {
+                            writer.writeLDIFRecord(record);
+                        } else {
+                            unsorted.add(entry);
+                        }
                     }
+                    
 
                 } catch (LDIFException e) {
                     logger.error("Exception occured reading LDIF file", e);
@@ -173,7 +185,11 @@ public class LDIFTransform {
                                 record = new LDIFAddChangeRecord(entry);
                                 break;
                         }
-                        writer.writeLDIFRecord(record);
+                        //Skip records whose DN is "ignore"
+                        if (!record.getDN().equalsIgnoreCase("ignore")) {
+                            writer.writeLDIFRecord(record);
+                        }
+                        
                     }
                 }
 

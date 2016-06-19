@@ -11,12 +11,12 @@
 # Instructions
 
 For help run:
-    java -jar LDIFTransform-1.2.jar`
+    java -jar LDIFTransform-1.3.jar`
 
 which outputs:
 
 
-    java -jar LDIFTransform-1.2.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
+    java -jar LDIFTransform-1.3.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
     Transformer class names:
     TranslateDN
     DeleteAttributes
@@ -89,6 +89,7 @@ You can add any key/value pairs you want. There are some predefined that will be
 | `prefixToDN` | A string that should be prefixed to the DN, how and where depends on the implementation | getPrefixToDN() |
 | `reformatDN-attribute` | Attributes that contain DN's that should be reformatted in the same way as the DN of the entry, e.g. `memberOf` and such. | getAttributesToReformat() |
 | `static-password` | A password that should be set on all entries, the name of the attribute depends on the implementation | getStaticPassword() |
+| `delete-attribute-starts-with` | Comma separated list of attribute name substrings that should be deleted from the entry if present and if the attribute name starts which one such substring, e.g. `msExch` will delete all attributes that start with `msExch` | getAttributesToDeleteStartsWith() |
 
 You can access the Properties object from the transformer code by calling the `getProperties()` method and that way access your own properties.
 
@@ -115,18 +116,18 @@ Then we can concentrate on the task at hand and we don't have worry if we will p
 
 - Convert content records to add change records and transform the DN and sort the entries
 
-`java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
+`java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
 
 - Convert content records to delete change records without transforming the DN and don't sort
 
-`java -jar LDIFTransform-1.2.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
+`java -jar LDIFTransform-1.3.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
 
 - Convert content records to content records and transform the DN and don't sort
 
-`java -jar LDIFTransform-1.2.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
+`java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
 
 # Skipping entries
-Since v1.2 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to `ignore`.
+Since v1.3 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to `ignore`.
 For an example see the `doc\fullName.js` transformer.
 
 # Limitations
@@ -134,6 +135,10 @@ For an example see the `doc\fullName.js` transformer.
 Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.
 
 # Changelog
+
+v1.3 (2016-06-17)
+* Add new property to the properties file: delete-attribute-starts-with
+ Comma separated list of attribute name substring. For example delete-attribute-starts-with=msExch will cause a delete of all attributes whose name start with msExch
 
 v1.2 (2016-05-11)
 * Add version header to the output LDIF file.

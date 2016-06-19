@@ -45,7 +45,7 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
     /**
      * Well known properties
      */
-    private final String[] knownProperties = {"delete-attribute", "dnPartToReplace", "dnPartToReplaceWith", "prefixToDN", "reformatDN-attribute", "static-password"};
+    private final String[] knownProperties = {"delete-attribute", "dnPartToReplace", "dnPartToReplaceWith", "prefixToDN", "reformatDN-attribute", "static-password", "delete-attribute-starts-with"};
 
     /**
      * Preloaded with property values from property file
@@ -57,6 +57,7 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
     private String[] attributesToPrefix;
     private String[] attributesToReformat;
     private String staticPassword;
+    private String[] attributesToDeleteStartsWith;
 
     /**
      * Contains the changes to groups that will be performed based on the
@@ -100,6 +101,9 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
                         break;
                     case "static-password":
                         this.staticPassword = propertyValue;
+                        break;
+                    case "delete-attribute-starts-with":
+                        this.attributesToDeleteStartsWith = propertyValue.split(",");
                         break;
                 }
 
@@ -167,6 +171,13 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
      */
     protected String getStaticPassword() {
         return staticPassword;
+    }
+    
+    /**
+     * @return the attributesToDeleteStartsWith
+     */
+    protected String[] getAttributesToDeleteStartsWith() {
+        return attributesToDeleteStartsWith;
     }
 
 }

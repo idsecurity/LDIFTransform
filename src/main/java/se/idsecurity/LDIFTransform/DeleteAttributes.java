@@ -16,10 +16,15 @@
  */
 package se.idsecurity.LDIFTransform;
 
+import com.unboundid.ldap.sdk.Attribute;
 import java.io.File;
 
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldif.LDIFException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Deletes the specified attributes from the entry
@@ -43,6 +48,20 @@ public class DeleteAttributes extends TransformerCommon {
                 for (String attrToDelete : getAttributesToDelete()) {
                     entry.removeAttribute(attrToDelete);
                 }
+                
+                
+                
+                if (getAttributesToDeleteStartsWith() != null) {
+                    Collection<Attribute> attributes = entry.getAttributes();
+                    
+                for (String attrToDeleteStartsWith : getAttributesToDeleteStartsWith()) {
+                        List<Attribute> toDelete = attributes.stream().filter(attr -> attr.getBaseName().
+                                startsWith(attrToDeleteStartsWith)).collect(Collectors.toList());
+                        toDelete.forEach(attr -> entry.removeAttribute(attr.getBaseName()));
+                }
+            }
+                
+                
                 
                 return entry;
 

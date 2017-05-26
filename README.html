@@ -13,8 +13,8 @@
   <li>Java 8u40 or newer</li>
   <li>UnboundID LDAP SDK</li>
   <li>SLF4J</li>
-</ul><h1>Instructions</h1><p>For help run:  java -jar LDIFTransform-1.3.jar`</p><p>which outputs:</p>
-<pre><code>java -jar LDIFTransform-1.3.jar &lt;path to transform file&gt; &lt;path to input LDIF&gt; &lt;path to output LDIF&gt; &lt;name of transformer class/path to JavaScript file&gt; &lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; [NoSort]
+</ul><h1>Instructions</h1><p>For help run:  java -jar LDIFTransform-1.4.jar`</p><p>which outputs:</p>
+<pre><code>java -jar LDIFTransform-1.4.jar &lt;path to transform file&gt; &lt;path to input LDIF&gt; &lt;path to output LDIF&gt; &lt;name of transformer class/path to JavaScript file&gt; &lt;add|delete|modify-replace|modify-add|modify-delete|none&gt; [NoSort]
 Transformer class names:
 TranslateDN
 DeleteAttributes
@@ -151,7 +151,26 @@ return tc;
 </ul><p><code>java -jar LDIFTransform-1.3.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort</code></p>
 <ul>
   <li>Convert content records to content records and transform the DN and don't sort</li>
-</ul><p><code>java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort</code></p><h1>Skipping entries</h1><p>Since v1.3 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to <code>ignore</code>. For an example see the <code>doc\fullName.js</code> transformer.</p><h1>Limitations</h1><p>Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.</p><h1>Changelog</h1><p>v1.3 (2016-06-17) * Add new property to the properties file: delete-attribute-starts-with  Comma separated list of attribute name substring. For example delete-attribute-starts-with=msExch will cause a delete of all attributes whose name start with msExch</p><p>v1.2 (2016-05-11) * Add version header to the output LDIF file. * Add better logging of input parameters. * Add support for skipping entries, i.e. not writing some entries that are in the input LDIF to the output LDIF by setting the entry DN to <code>ignore</code>.</p><p>v1.1 (2015-09-03) * Added support for producing LDIF files with <code>changetype: modify</code></p><p>v1.0 (2015-07-02)</p>
+</ul><p><code>java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort</code></p>
+<ul>
+  <li>How to run with additional JAR files on the class path and with a custom JavaScript transform file</li>
+</ul><p><code>java -cp .\Ldiftransform-1.3.jar;lib\* se.idsecurity.LDIFTransform.LDIFTransform ..\..\doc\initialimport.properties &quot;users.ldif&quot; &quot;users-initial.ldif&quot; ..\..\doc\initialimport.js none NoSort</code></p><h1>Skipping entries</h1><p>Since v1.3 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to <code>ignore</code>. For an example see the <code>doc\fullName.js</code> transformer.</p><h1>Limitations</h1><p>Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.</p><h1>Changelog</h1><p>v1.4 (2017-05-26)</p>
+<ul>
+  <li><p>Updated help information</p></li>
+  <li><p>Add support for reformatting DN attributes used by the NetIQ eDirectory ACL attribute</p></li>
+  <li><p>Updated libraries to latest versions</p></li>
+</ul><p>v1.3 (2016-06-17)</p>
+<ul>
+  <li>Add new property to the properties file: delete-attribute-starts-with  Comma separated list of attribute name substring. For example delete-attribute-starts-with=msExch will cause a delete of all attributes whose name start with msExch</li>
+</ul><p>v1.2 (2016-05-11)</p>
+<ul>
+  <li>Add version header to the output LDIF file.</li>
+  <li>Add better logging of input parameters.</li>
+  <li>Add support for skipping entries, i.e. not writing some entries that are in the input LDIF to the output LDIF by setting the entry DN to <code>ignore</code>.</li>
+</ul><p>v1.1 (2015-09-03)</p>
+<ul>
+  <li>Added support for producing LDIF files with <code>changetype: modify</code></li>
+</ul><p>v1.0 (2015-07-02)</p>
 <ul>
   <li>Initial release</li>
 </ul><h1>License</h1><p><a href="http://www.gnu.org/licenses/gpl-3.0.txt">GPL v3.0</a></p>

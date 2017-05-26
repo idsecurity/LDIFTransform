@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2016 almu
+ * Copyright (C) 2017 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldif.LDIFException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Changes the DN using regex based on the properties dnPartToReplace and
@@ -38,18 +43,50 @@ public class TranslateDN extends TransformerCommon {
     private final static Logger logger = LoggerFactory
             .getLogger(TranslateDN.class);
 
-    Pattern dnPattern;
+    //Pattern dnPattern;
 
     Pattern prefixToDNPattern;
 
     Pattern attrToPrefixPattern = Pattern.compile("(.+)");
+    
+    Pattern eDirAclAttributesPattern = Pattern.compile(".+#.+#(.+)#.+");
+    
+    Set<String> eDirAclAttributes = new HashSet<>();
+    
+    Map<String, String> replaceMap = new HashMap<>();
 
     DeleteAttributes deleteAttributes;
 
     public TranslateDN(File transform) {
         super(transform);
 
-        dnPattern = Pattern.compile(getDnPartToReplace());
+        eDirAclAttributes.add("ACL");
+        eDirAclAttributes.add("nspmPasswordACL");
+        
+        String dnPartToReplace = getDnPartToReplace();
+        String dnPartToReplaceWith = getDnPartToReplaceWith();
+        
+       
+            String[] dnPartToReplaceSplit = dnPartToReplace.split("\\|");
+            String[] dnPartToReplaceWithSplit = dnPartToReplaceWith.split("\\|");
+            
+            if (dnPartToReplaceSplit.length != dnPartToReplaceWithSplit.length) {
+                logger.error("dnPartToReplace and dnPartToReplaceWith must contain the same number of components!"
+                + "\ndnPartToReplace contains " + dnPartToReplaceSplit.length
+                + "\ndnPartToReplaceWith contains " + dnPartToReplaceWithSplit.length);
+                
+                throw new IllegalArgumentException("Incorrect number of components in dnPartToReplace/dnPartToReplaceWith property!");
+            }
+            
+            for (int i = 0; i<dnPartToReplaceSplit.length; i++) {
+                replaceMap.put(dnPartToReplaceSplit[i], dnPartToReplaceWithSplit[i]);
+            }
+            
+       
+           // dnPattern = Pattern.compile(getDnPartToReplace());
+        
+        
+        
 
         /**
          * Match beginning of the dn string, CN=XYZ,OU=... and get the part
@@ -71,19 +108,40 @@ public class TranslateDN extends TransformerCommon {
 		// Replace the DC=ACME,DC=SE part in the dn with the string in
         // dnPartToReplaceWith, e.g. OU=MyTest,DC=ACMEX,DC=SE
         String dn = entry.getDN();
-        Matcher dnMatcher = dnPattern.matcher(dn);
-        if (dnMatcher.find()) {
-            dn = dnMatcher.replaceFirst(getDnPartToReplaceWith());
-            entry.setDN(dn);
-        } else {
-            logger.info("Couldn't find DN {} in string {} on line number {}",
-                    getDnPartToReplace(), dn, firstLineNumber);
-        }
+
+
+        String replacedDN = replaceDN(dn);
+        logger.info("Original DN: " + dn + "\nReplaced DN: " + replacedDN);
+        
+        entry.setDN(replacedDN);
 
         /**
          * Delete any attributes that we don't want
          */
         entry = deleteAttributes.translate(entry, firstLineNumber);
+        
+        //Translate any attributes from the "reformatDN-attribute" property
+        String[] attributesToReformat = getAttributesToReformat();
+        for (String attrName : attributesToReformat) {
+            if (entry.hasAttribute(attrName)) {
+                String[] attributeValues = entry.getAttributeValues(attrName);
+
+                if (eDirAclAttributes.contains(attrName)) {
+                    for (String attrValue : attributeValues) {
+                        entry.removeAttributeValue(attrName, attrValue);
+                        attrValue = replaceDNACL(attrValue);
+                        entry.addAttribute(attrName, attrValue);
+                    }
+                } else {
+                    for (String attrValue : attributeValues) {
+                        entry.removeAttributeValue(attrName, attrValue);
+                        attrValue = replaceDN(attrValue);
+                        entry.addAttribute(attrName, attrValue);
+                    }
+                }
+
+            }
+        }
         
         return entry;
     }
@@ -91,12 +149,33 @@ public class TranslateDN extends TransformerCommon {
     	// Replace the DC=ACME,DC=SE part in the dn with the string in
     // dnPartToReplaceWith, e.g. OU=BetaTest,DC=ACME,DC=SE
     public String replaceDN(String originalDN) {
-        Matcher dnMatcher = dnPattern.matcher(originalDN);
-        if (dnMatcher.find()) {
-            originalDN = dnMatcher.replaceFirst(getDnPartToReplaceWith());
 
+        String before = originalDN;
+
+        for (Map.Entry<String, String> entry : replaceMap.entrySet()) {
+            originalDN = originalDN.replaceFirst(entry.getKey(), entry.getValue());
         }
+        logger.info("Before: {}, after: {}", before, originalDN);
+
         return originalDN;
     }
 
+    /**
+     * For use with NetIQ eDirectory ACL attribute which contains a DN
+     * @param originalACL
+     * @return The reformatted DN
+     * @since v1.4
+     */
+    public String replaceDNACL(String originalACL) {
+        Objects.requireNonNull(originalACL);
+        Matcher dnMatcher = eDirAclAttributesPattern.matcher(originalACL);
+        dnMatcher.matches();
+        if (dnMatcher.group(1).contains("=")) {
+            String dnToReplace = dnMatcher.group(1);
+            String replacedDN = replaceDN(dnToReplace);
+            originalACL = originalACL.replace(dnToReplace, replacedDN);
+        }
+        
+        return originalACL;
+    }
 }

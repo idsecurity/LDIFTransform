@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2016 almu
+ * Copyright (C) 2017 almu
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +56,8 @@ public class LDIFTransform {
     public static void main(String[] args) {
 
         if (args.length < LENGTH_OF_ARGS) {
-            System.out.println("Usage: java -jar LDIFTransform-<version>.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]");
-            System.out.println("Transformer class names:");
+            System.out.println("Usage: java -jar LDIFTransform-<version>.jar \n\t<path to transform file> \n\t<path to input LDIF> \n\t<path to output LDIF> \n\t<name of transformer class> \n\t<add|delete|modify-replace|modify-add|modify-delete|none> \n\t[NoSort]");
+            System.out.println("\nTransformer class names:");
 
             for (Transformers t : Transformers.values()) {
                 System.out.println(t);

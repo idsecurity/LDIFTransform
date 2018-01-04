@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldif.LDIFReaderEntryTranslator;
 import com.unboundid.ldif.LDIFRecord;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Contains convenience methods, all transformers are required to extend this
@@ -39,9 +41,10 @@ import com.unboundid.ldif.LDIFRecord;
 public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
 
     private final static Logger logger = LoggerFactory.getLogger(TransformerCommon.class);
-    private final File transform;
-    private Properties properties = new Properties();
-
+    
+    private final Properties properties = new Properties();
+   
+    
     /**
      * Well known properties
      */
@@ -68,13 +71,13 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
     /**
      * Preloads a number of variables from the properties file
      *
-     * @param transform
+     * @param transformProperties
      */
-    public TransformerCommon(File transform) {
-        this.transform = transform;
-
+    public TransformerCommon(File transformProperties) {
+        
+        FileInputStream propStream = null;
         try {
-            FileInputStream propStream = new FileInputStream(transform);
+            propStream = new FileInputStream(transformProperties);
             properties.load(propStream);
 
             //Parse the properties file for known properties, unknown properties have to be fetched from each class extending TransformerCommon
@@ -112,6 +115,14 @@ public abstract class TransformerCommon implements LDIFReaderEntryTranslator {
         } catch (IOException e) {
             logger.error("Exception reading transform file", e);
             throw new IllegalStateException("Could not create instance", e);
+        } finally {
+            if (propStream != null) {
+                try {
+                    propStream.close();
+                } catch (Exception ignored) {
+                }
+            }
+            
         }
 
     }

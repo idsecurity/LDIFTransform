@@ -36,6 +36,8 @@ import com.unboundid.ldif.LDIFException;
 import com.unboundid.ldif.LDIFReader;
 import com.unboundid.ldif.LDIFRecord;
 import com.unboundid.ldif.LDIFWriter;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Transforms an LDIF file using a transformation file and a transformer class.
@@ -52,6 +54,20 @@ public class LDIFTransform {
     private static final Logger logger = LoggerFactory.getLogger(LDIFTransform.class);
 
     private static boolean noSort = false;
+    
+    /**
+     * Quick way to measure the time taken to run this app
+     * @since 1.5
+     */
+    private static Instant startTimeRead;
+    
+    /**
+     * Quick way to measure the time taken to run this app
+     * @since 1.5
+     */
+    private static final Instant loadTime = Instant.now();
+    
+    
 
     public static void main(String[] args) {
 
@@ -70,8 +86,8 @@ public class LDIFTransform {
             noSort = true;
         }
 
-        File transform = new File(args[0]);
-        logger.info("Transform properties file is: {}", transform.getPath());
+        File transformProperties = new File(args[0]);
+        logger.info("Transform properties file is: {}", transformProperties.getPath());
 
         File ldifInput = new File(args[1]);
         logger.info("LDIF input file is: {}", ldifInput.getPath());
@@ -87,11 +103,18 @@ public class LDIFTransform {
         
         logger.info("NoSort is: {}", noSort);
 
-        TransformerCommon classToUse = GetTransformer.getTransformerClass(transformerClassName, transform);
+        TransformerCommon classToUse = GetTransformer.getTransformerClass(transformerClassName, transformProperties);
 
         LDIFReader reader = null;
         LDIFWriter writer = null;
         try {
+            startTimeRead = Instant.now();
+            
+            int availableProcessors = Runtime.getRuntime().availableProcessors();
+            if (availableProcessors >= 4) {
+                availableProcessors = 4;
+            }
+            
             reader = new LDIFReader(new BufferedReader(new FileReader(ldifInput)), 0, classToUse);
             int entriesRead = 0;
             int errorsEncountered = 0;
@@ -106,6 +129,8 @@ public class LDIFTransform {
                     entry = reader.readEntry();
                     if (entry == null) {
                         logger.info("All entries processed: {}", entriesRead);
+                        Instant endTimeRead = Instant.now();
+                        logger.info("Read/translation time: {}", Duration.between(startTimeRead, endTimeRead));
                         break;
                     }
                     entriesRead++;
@@ -216,6 +241,10 @@ public class LDIFTransform {
             } catch (IOException ignored) {
 
             }
+            Instant endTimeAll = Instant.now();
+            logger.info("Time since read/translation began: {}", Duration.between(startTimeRead, endTimeAll));
+            logger.info("Time since app was started: {}", Duration.between(loadTime, endTimeAll));
+            
         }
 
     }

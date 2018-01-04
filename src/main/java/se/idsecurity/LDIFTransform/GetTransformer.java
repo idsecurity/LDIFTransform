@@ -27,6 +27,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.SimpleBindings;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,11 @@ public class GetTransformer {
          */
 	private static TransformerCommon getFromJavascript(String filePath, File transformFile) {
 		try {
-			ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+                        //https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes
+                        NashornScriptEngineFactory nsef = new NashornScriptEngineFactory();
+                        
+			ScriptEngine engine = nsef.getScriptEngine("--language=es6");
+                        
 			Logger jsLogger = LoggerFactory.getLogger("JS: " + new File(filePath).getName());
 			engine.put("logger", jsLogger);
 			
@@ -84,10 +89,11 @@ public class GetTransformer {
 			engine.getContext().setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
 			
 			Object eval = engine.eval(new FileReader(new File(filePath)));
+                      
 			Invocable invocable = (Invocable)engine;
 			
 			Object transformerCommonFromJavaScript = invocable.invokeFunction("getTransformer", transformFile);
-			
+		
 			TransformerCommon tc = (TransformerCommon)transformerCommonFromJavaScript;
 			
 			return tc;

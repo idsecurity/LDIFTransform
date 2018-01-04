@@ -4,19 +4,19 @@
 
 # Requirements
 
-- Java 8u40 or newer
+- Java 8u151 or newer
 - UnboundID LDAP SDK
 - SLF4J
 
 # Instructions
 
 For help run:
-    java -jar LDIFTransform-1.4.jar`
+    java -jar LDIFTransform-1.5.jar`
 
 which outputs:
 
 
-    java -jar LDIFTransform-1.4.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
+    java -jar LDIFTransform-1.5.jar <path to transform file> <path to input LDIF> <path to output LDIF> <name of transformer class/path to JavaScript file> <add|delete|modify-replace|modify-add|modify-delete|none> [NoSort]
     Transformer class names:
     TranslateDN
     DeleteAttributes
@@ -116,19 +116,19 @@ Then we can concentrate on the task at hand and we don't have worry if we will p
 
 - Convert content records to add change records and transform the DN and sort the entries
 
-`java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
+`java -jar LDIFTransform-1.5.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype add`
 
 - Convert content records to delete change records without transforming the DN and don't sort
 
-`java -jar LDIFTransform-1.3.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
+`java -jar LDIFTransform-1.5.jar doc/empty.properties ./input.ldif ./delete.ldif ./doc/transformer-template.js delete NoSort`
 
 - Convert content records to content records and transform the DN and don't sort
 
-`java -jar LDIFTransform-1.3.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
+`java -jar LDIFTransform-1.5.jar doc/dn.properties ./input.ldif ./output.ldif TranslateDN changetype none NoSort`
 
 - How to run with additional JAR files on the class path and with a custom JavaScript transform file
 
-`java -cp .\Ldiftransform-1.3.jar;lib\* se.idsecurity.LDIFTransform.LDIFTransform ..\..\doc\initialimport.properties "users.ldif" "users-initial.ldif" ..\..\doc\initialimport.js none NoSort`
+`java -cp .\Ldiftransform-1.5.jar;lib\* se.idsecurity.LDIFTransform.LDIFTransform ..\..\doc\initialimport.properties "users.ldif" "users-initial.ldif" ..\..\doc\initialimport.js none NoSort`
 
 # Skipping entries
 Since v1.3 it is possible to skip entries from being copied from the input LDIF to the output LDIF by setting the entry DN in a transformer to `ignore`.
@@ -139,6 +139,14 @@ For an example see the `doc\fullName.js` transformer.
 Handles only LDIF files containing content records or add records. Modify records and other changetypes are not supported.
 
 # Changelog
+
+v1.5 (2018-01-01)
+
++ The Nashorn ECMAScript engine is now loaded with "--language=es6" so that you
+ can use ES6 features supported by Nashorn such as const and let.
+
++ Prints timining statistics on how long each operation took.
+
 
 v1.4 (2017-05-26)
 
